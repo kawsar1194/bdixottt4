@@ -1,0 +1,35 @@
+import requests
+
+# Function to check if a URL is reachable
+def is_url_reachable(url):
+    try:
+        response = requests.head(url)
+        return response.status_code == 200
+    except requests.ConnectionError:
+        return False
+
+# Function to remove expired URLs from the M3U playlist
+def remove_expired_urls(playlist_file):
+    updated_lines = []
+    with open(playlist_file, 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            line = line.strip()
+            if line.startswith('#EXTINF'):
+                # Assume the next line is the URL
+                url = lines[lines.index(line) + 1].strip()
+                if is_url_reachable(url):
+                    updated_lines.append(line)
+                    updated_lines.append(url + '\n')
+                else:
+                    print(f"URL '{url}' is expired and has been removed.")
+            else:
+                updated_lines.append(line + '\n')
+
+    with open(playlist_file, 'w') as file:
+        file.writelines(updated_lines)
+
+# Example usage
+if __name__ == "__main__":
+    playlist_file = 'playlist.m3u'
+    remove_expired_urls(playlist_file)
