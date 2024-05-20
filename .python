@@ -1,0 +1,32 @@
+import requests
+
+def remove_expired_links(playlist_file):
+    updated_lines = []
+    with open(playlist_file, 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            line = line.strip()
+            if line.startswith('#EXTINF'):
+                # Assume the next line is the URL
+                url = lines[lines.index(line) + 1].strip()
+                if is_url_valid(url):
+                    updated_lines.append(line)
+                    updated_lines.append(url + '\n')
+                else:
+                    print(f"Expired link removed: {url}")
+            else:
+                updated_lines.append(line + '\n')
+
+    with open(playlist_file, 'w') as file:
+        file.writelines(updated_lines)
+
+def is_url_valid(url):
+    try:
+        response = requests.head(url)
+        return response.status_code == 200
+    except requests.ConnectionError:
+        return False
+
+if __name__ == "__main__":
+    playlist_file = 'playlist.m3u'
+    remove_expired_links(playlist_file)
